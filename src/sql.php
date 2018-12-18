@@ -48,18 +48,16 @@
         }    
     }
 
-    function Insert(PDO &$pdo, $id, $name, $comment, $password) {
-        $sql = "INSERT INTO tbtest (id, name, comment, password) VALUES (:id, :name, :comment, :password)";
+    function InsertComment(PDO &$pdo, $id, $comment) {
+        $sql = "INSERT INTO comments (account_id, comment) VALUES (:id, :comment)";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam (":id", $id, PDO::PARAM_INT);
-        $stmt->bindParam (":name", $name, PDO::PARAM_STR);
         $stmt->bindParam (":comment", $comment, PDO::PARAM_STR);
-        $stmt->bindParam (":password", $password, PDO::PARAM_STR);
         $stmt->execute ();
     }
 
-    function Delete (PDO &$pdo, $id) {
-        $sql = "DELETE FROM tbtest WHERE id=:id;";
+    function DeleteComment (PDO &$pdo, $id) {
+        $sql = "DELETE FROM comments WHERE id=:id;";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
         $stmt->execute();
@@ -97,17 +95,22 @@
         return $res;        
     }
 
-    function GetName (PDO &$pdo, $id) {
-        $sql = "SELECT name FROM tbtest WHERE id=:id;";
+    function CheckCommentOwner (PDO &$pdo, $account_id, $comment_id) {
+        $sql = "SELECT * FROM comments WHERE id=:comment_id AND account_id=:account_id;";
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->bindParam(":comment_id", $comment_id, PDO::PARAM_INT);
+        $stmt->bindParam(":account_id", $account_id, PDO::PARAM_INT);
         $stmt->execute();
-        $res = $stmt->fetchColumn();
-        return $res;
-    }
 
-    function CheckPassword (PDO &$pdo, $id, $password) {
-        $sql = "SELECT id, password FROM tbtest WHERE id=:id AND password=:password;";
+        $res = $stmt->fetchAll();
+        if (count($res) == 1)
+            return true;
+        else 
+            return false;
+    }
+ 
+    function CheckPasswordByID (PDO &$pdo, $id, $password) {
+        $sql = "SELECT id, password FROM account WHERE id=:id AND password=:password;";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
         $stmt->bindParam(":password", $password, PDO::PARAM_STR);
@@ -118,5 +121,47 @@
             return true;
         else 
             return false;
+    }
+    
+    function CheckPassword (PDO &$pdo, $account, $password) {
+        $sql = "SELECT account, password FROM account WHERE account=:account AND password=:password;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(":account", $account, PDO::PARAM_STR);
+        $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $res = $stmt->fetchAll();
+        if (count($res) == 1) 
+            return true;
+        else 
+            return false;
+    }
+
+    function CreateAccount (PDO &$pdo, $account_name, $name, $password, $email) {
+        $sql = "INSERT INTO account(account, show_name, password, mail_address) VALUES (:account, :name, :password, :email);";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(":account", $account_name, PDO::PARAM_STR);
+        $stmt->bindParam(":name", $name, PDO::PARAM_STR);
+        $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+        $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+        return $stmt->execute();
+    }
+
+    function GetAccountID (PDO &$pdo, $account) {
+        $sql = "SELECT id FROM account WHERE account=:account";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(":account", $account, PDO::PARAM_STR);
+        if ($stmt->execute()) {
+            return $stmt->fetchColumn();
+        }
+    }
+
+    function GetName (PDO &$pdo, $id) {
+        $sql = "SELECT show_name FROM account WHERE id=:id;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $res = $stmt->fetchColumn();
+        return $res;
     }
 ?>

@@ -24,7 +24,9 @@
 
         if (!empty($_POST["command"])) {
             $sql = $_POST["command"];
-            $stmt = $pdo->query($sql);
+            var_dump($sql);
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
             $res = $stmt->fetchAll();
 
             display_data($res);
